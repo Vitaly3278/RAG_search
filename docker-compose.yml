@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    command: uvicorn app.api:app --host 0.0.0.0 --port 8000 --reload
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app
+
+  bot:
+    build: .
+    command: python -m bot.telegram_bot
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+    depends_on:
+      - web

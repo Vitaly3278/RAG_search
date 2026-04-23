@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAG Поиск по документам</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; max-width: 860px; }
+    h1 { margin-bottom: 10px; }
+    form { margin: 20px 0; padding: 16px; border: 1px solid #ddd; border-radius: 8px; }
+    input[type="text"] { width: 100%; padding: 10px; margin-top: 8px; }
+    input[type="file"] { margin-top: 8px; }
+    button { margin-top: 10px; padding: 10px 14px; cursor: pointer; }
+    .status { padding: 10px; border-radius: 6px; margin: 10px 0; }
+    .ok { background: #eef9ee; border: 1px solid #9ad39a; }
+    .warn { background: #fff7e6; border: 1px solid #f0cc7a; }
+    .answer { white-space: pre-wrap; margin: 12px 0; }
+    .history { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-top: 20px; }
+    .history-item { margin-bottom: 16px; }
+    ul { margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Умный поиск по документам</h1>
+  {% if indexed %}
+    <div class="status ok">Индекс готов. Можно задавать вопросы.</div>
+  {% else %}
+    <div class="status warn">Индекс не найден. Сначала загрузите документы через API `/api/upload`.</div>
+  {% endif %}
+
+  {% if upload_message %}
+    <div class="status ok">{{ upload_message }}</div>
+  {% endif %}
+
+  <form method="post" action="/upload" enctype="multipart/form-data">
+    <label for="files"><b>Загрузка документов</b></label><br>
+    <input id="files" name="files" type="file" multiple required>
+    <br>
+    <button type="submit">Загрузить и проиндексировать</button>
+  </form>
+
+  <form method="post" action="/ask">
+    <label for="question"><b>Ваш вопрос</b></label>
+    <input id="question" name="question" type="text" required value="{{ question or '' }}">
+    <button type="submit">Спросить</button>
+  </form>
+
+  <form method="post" action="/reset-chat">
+    <button type="submit">Очистить историю чата</button>
+  </form>
+
+  {% if answer %}
+    <h2>Ответ</h2>
+    <div class="answer">{{ answer }}</div>
+    <h3>Источники</h3>
+    <ul>
+      {% for item in sources %}
+      <li>{{ item.source }}, стр. {{ item.page }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  {% if chat_history and chat_history|length > 0 %}
+    <div class="history">
+      <h2>История диалога</h2>
+      {% for item in chat_history|reverse %}
+      <div class="history-item">
+        <div><b>Вы:</b> {{ item.user }}</div>
+        <div class="answer"><b>Бот:</b> {{ item.assistant }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</body>
+</html>
